@@ -1,0 +1,381 @@
+\documentclass[letterpaper]{physor2026}
+
+%%% Packages Required by Class (already included)
+% fancyhdr
+% lastpage
+% titling
+% titlesec
+% ragged2e
+% enumitem
+% amsmath
+% graphicx
+% geometry
+% newtxtext
+% newtxmath
+% hyperref
+% cleveref
+% caption
+% authblk
+% apptools
+% appendix
+% ifpdf
+% epstopdf
+
+%%% Some other useful packages
+% \usepackage{tikz}
+% \usepackage{color}
+\usepackage{subcaption}
+% \usepackage{algcompatible}
+% \usepackage{bm}
+% \usepackage{array}
+
+\usepackage{siunitx}
+\graphicspath{{images/}}
+\usepackage[acronym]{glossaries}
+\usepackage{nomencl} % If needed
+\makenomenclature
+
+
+\title{A Multiscale 3-D/1-D Multiphysics Molten Salt Reactor Simulation Framework Based on
+Moltres-SAM Coupling}
+
+%%% Authors (use arabic numbers: 1, 2, 3, etc. for affiliationNumber)
+%%% \addAuthor{GivenName MiddleInitial. FamilyName}{affiliationNumber}
+\addAuthor[sunmyung.park@austin.utexas.edu]{Sun Myung Park}{1}
+\addAuthor{Cole A.\ Gentry}{1}
+\addAuthor{Nicholas Luciano}{1}
+\addAuthor{Kevin T.\ Clarno}{1}
+\addAuthor{Rok Krpan}{2}
+\addAuthor{Carlo Fiorina}{2}
+\addAuthor{Jean Ragusa}{2}
+
+%%% Affiliations (from authblk)
+%%% \addAffiliation{affiliationNumber}{Name of Institute, City, State/Country}
+\addAffiliation{1}{The University of Texas at Austin, Austin, TX, USA}
+\addAffiliation{2}{Texas A\&M University, College Station, TX, USA}
+
+%%% Write text for abstract
+%%% Most text modifying commands will work in abstract
+\Abstract{%
+Reactor analysis tools for molten salt reactors (MSRs) are critical for supporting their
+development and commercial deployment. However, the liquid fuel form in MSRs poses computational
+challenges such as strong temperature reactivity feedback and delayed neutron precursor drift.
+This work introduces a multiscale 3-D/1-D multiphysics simulation framework for molten salt reactor
+analysis by coupling two MOOSE-based codes, Moltres and SAM, for neutronics and thermal-hydraulics,
+respectively. This new multiphysics tool aims to provide a means for engineering-level MSR analyses
+while retaining 3-D spatial resolution of the core for accurate reactivity feedback and precursor
+tracking. We present the coupling scheme between Moltres and SAM implemented entirely with native
+coupling interfaces provided by MOOSE. Thereafter, we demonstrate the multiphysics tool on a
+full-core MSR model derived from the Molten Salt Reactor Experiment (MSRE). The steady-state
+neutronics and thermal-hydraulics results were consistent with expected behavior of
+a graphite-moderated MSR. Ongoing work focuses on improving model fidelity and computational
+performance and verifying results against other multiphysics tools.
+}
+
+
+%%% List up to 5 keywords separated by a comma
+\keywords{Molten salt reactor, multiphysics, multiscale, MOOSE}
+
+%%% Provide a short title for the header on odd pages
+\shortTitle{A Multiscale 3-D/1-D Multiphysics Molten Salt Reactor Simulation Framework}
+
+%%% Provide a short author listing for the header on even pages
+\authorHead{S. P, et al.}
+
+%%% If LaTeX reports the line number of an error at \begin{document} it
+%%%   is most likely due to an error in one of the commands above
+\begin{document}
+\include{acros}
+
+\section{INTRODUCTION}\label{sec:introduction}
+
+\glspl{MSR} have gained renewed interest as a promising Generation IV reactor concept due to their
+strong negative reactivity feedbacks, high operating temperature, and potential for online fuel
+reprocessing. Unlike solid-fuel reactors, \glspl{MSR} feature mobile fuel inventory, and the
+delayed neutron precursors drift with the circulating fuel salt. Therefore, the reactor kinetics
+are tightly coupled with thermal-hydraulics.
+
+Simple 1-D flow models that combine multiple fuel salt channels into fewer 1-D channels have proved
+to be accurate at reproducing integral reactor responses (e.g., $k_{\text{eff}}$), but these models
+cannot model transient scenarios with significant spatial shifts in temperature and neutron flux.
+On the other hand, high-fidelity 3-D flow models remain too computationally intensive for
+engineering-level tasks.
+
+In this work, we develop a multiscale 3-D/1-D multiphysics \gls{MSR} model by coupling two
+\gls{MOOSE}-based applications, Moltres \cite{lindsay_introduction_2018, park_verification_2022}
+(3-D \gls{MSR} multiphysics code) and \gls{SAM} \cite{hu_sam_2025} (modern
+nuclear system code for advanced reactor safety analysis). Moltres provides 3-D neutron diffusion,
+precursor source, and graphite heat conduction modeling while \gls{SAM} provides 1-D multichannel
+flow modeling for system thermal-hydraulics and precursor drift to model all salt channels in a
+full-core \gls{MSR} geometry and ex-core segments of the primary loop. The 1-D multichannel flow
+model reduces the computational cost relative to 3-D flow models while simultaneously retaining
+more 3-D spatial resolution relative to single-/few-channel 1-D flow models. The long-term
+objective of this research is to develop an intermediate-fidelity \gls{MSR} simulation framework to
+support the digital twin development efforts under the Digital Molten Salt Reactor Initiative at
+The University of Texas at Austin.
+
+\section{SOFTWARE DESCRIPTION}
+
+\subsection{MOLTRES}
+
+Moltres is an open-source multiphysics reactor simulation software developed for \gls{MSR}
+modeling. Moltres solves the neutron
+diffusion or $S_N$ neutron transport equations for neutronics modeling. The delayed neutron
+precursor model in Moltres includes advection capabilities that can natively couple to any flow
+model in \gls{MOOSE} such as the Navier-Stokes module or the \gls{SAM} nuclear system code.
+
+Moltres has been used in past work to model the \gls{MSRE}
+\cite{lindsay_introduction_2018, park_advancements_2025}, \gls{MSFR} \cite{park_advancement_2020},
+and fast-spectrum chloride \glspl{MSR} \cite{lawson_development_2024}. We chose Moltres for this
+work due to its \gls{MSR} modeling capabilities and its integration within the \gls{MOOSE}
+ecosystem. As a \gls{MOOSE}-based tool, Moltres benefits from highly scalable mesh and
+solver routines available through \gls{MOOSE} and natively couples to \gls{SAM} (also a
+\gls{MOOSE}-based tool). Moltres' open-source nature accelerates the development and testing of new
+features to improve \gls{MSR} modeling and simulation performance.
+
+\subsection{SYSTEM ANALYSIS MODULE (SAM)}
+
+\gls{SAM} is a modern system analysis tool for advanced reactor design optimization, safety
+analyses, and licensing support. Though originally developed for sodium fast reactors, \gls{SAM}
+developers have implemented and tested numerous advanced features tailored for salt-cooled reactors
+such as multiphase species transport, freeze plug modeling, and drift flux modeling. In most
+applications, \gls{SAM} solves the 1-D incompressible but thermally expandable flow equations along
+with heat transfer equations. \gls{SAM} also supports coarse-mesh, multi-D flow modeling typically
+used for reactor designs with large coolant pools or porous medium flow in pebble-bed reactors.
+This work uses \gls{SAM}-Lite, a non-export controlled version of \gls{SAM} with some restricted
+capabilities removed. Since all capabilities demonstrated in this work can be replicated using
+\gls{SAM}, we drop the \textit{-Lite} suffix for brevity.
+
+In general, two different \gls{SAM}-based \gls{MSRE} models have been demonstrated in the current
+literature. The first \gls{SAM}-based model approximates the \gls{MSRE} core as a single 1-D pipe
+while preserving the height and flow area \cite{hu_fy21_2021}. This model has been validated
+against experimental data
+from various transient experiments by accurately reproducing integral neutronic and temperature
+metrics. The second \gls{SAM}-based model couples the Griffin reactor physics code to \gls{SAM} and
+models the \gls{MSRE} core as a homogenized, 2-D axisymmetric region
+\cite{jaradat_multiphysics_2023}. Griffin solves the neutron diffusion
+equations and \gls{SAM} solves porous media flow equations in the 2-D core region. In both
+\gls{SAM}-based models, \gls{SAM} models the ex-core salt loop as several serially connected 1-D
+pipe regions forming a loop with the core region.
+
+\section{MODEL DESCRIPTION} \label{sec:model}
+
+%Figure \ref{fig:msre} shows a vertical
+%cross section view of the \gls{MSRE} geometry.
+
+%\begin{figure}[h]
+%    \centering
+%    \includegraphics[width=0.5\columnwidth]{msre-picture}
+%    \caption{Vertical cross section of the \gls{MSRE} vessel \cite{robertson_msre_1965}.}
+%    \label{fig:msre}
+%\end{figure}
+
+The reference geometry for this work is from the \gls{MSRE} built in 1964 at Oak Ridge National
+Laboratory \cite{robertson_msre_1965}. It was a graphite-moderated \gls{MSR} that initially
+operated on $^{235}$U and later replaced with $^{233}$U.
+The \gls{MSR} geometry in this work incorporates most of the \gls{MSRE} design as a
+representative model of graphite-moderated \glspl{MSR}. Several geometric simplifications have been
+made to facilitate model creation for code-to-code verification between multiphysics \gls{MSR}
+analysis tools of varying model fidelity. This verification exercise is ongoing and
+formalized as a series of \gls{MSR} progression problem benchmarks
+\cite{gentry_graphite-moderated_2025}.
+
+\begin{figure}[!b]
+    \centering
+
+    \begin{subfigure}[b]{0.58\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{cross-section}
+      \caption{Horizontal cross section}
+      \label{fig:cross}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.38\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{vertical}
+      \caption{Vertical cross section}
+      \label{fig:vertical}
+    \end{subfigure}
+    
+    \caption{Horizontal and vertical cross sections of the 3-D \gls{MSR} core model.}
+    \label{fig:geometry}
+\end{figure}
+
+Figure \ref{fig:geometry} shows the horizontal and vertical cross section views of the 3-D \gls{MSR}
+core geometry. The reactor geometry consists of 1136 regular fuel channels and four central,
+annular salt channels each encircling four control rod guide thimbles. The fuel channel centroids
+form a 0.0508 m$\times$0.0508 m square grid in the graphite matrix. We simplified the
+peripheral core region by having the graphite core terminate with a 2.54 cm-thick vessel wall. The
+fuel-graphite core region is sandwiched by the upper and lower plena regions filled with 100\% fuel
+salt and surrounded radially by the same vessel wall. Table \ref{table:dimensions} lists some of
+the key physical dimensions of the \gls{MSR} core model.
+
+\begin{table}[htb]
+  \centering
+  \caption{Key physical dimensions of the \gls{MSR} core model.}
+  \label{table:dimensions}
+  \begin{tabular}{l S}
+    \toprule
+    Parameter & {Value} \\
+    \midrule
+    Lower plenum height [m] & 0.1875 \\
+    Graphite height [m] & 1.70027 \\
+    Upper plenum height [m] & 0.254 \\
+    Core radius [m] & 0.7366 \\
+    Central channel inner radius [m] & 0.0254 \\
+    Central channel outer radius [m] & 0.031992 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Salt flows upwards through the core, leaves the core into 1-D pipes connecting to the pump,
+followed by the heat exchanger, before flowing through the downcomer and re-entering the core from
+the bottom. Out-of-core components were adapted from an existing \gls{SAM} \gls{MSRE} model
+\cite{hu_fy21_2021} openly available in the Virtual Test Bed Repository
+\cite{giudicelli_virtual_2023}. The overall geometry is a preliminary \gls{MSR} geometry created
+for this work and is subject to future changes. We plan to include control rod components in
+future publications.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{coupling}
+    \caption{Moltres and \gls{SAM} MultiApp coupling setup and data transfers.}
+    \label{fig:coupling}
+\end{figure}
+
+We coupled Moltres and \gls{SAM} as \textit{sibling subapps} using the MOOSE MultiApp system. A
+dummy \textit{main app} does not perform any calculations but dictates all data transfers between
+the two subapps.
+Figure \ref{fig:coupling} shows an overview of how Moltres and \gls{SAM} are
+coupled and the data transfers involved between the two codes. After solving the
+3-D two-group neutron diffusion and graphite heat conduction equations, Moltres transfers neutron
+source distribution for precursor source calculations ($\sum_g\nu\Sigma_{f,g}\phi_g$), fission heat
+source distribution ($\sum_g\epsilon\Sigma_{f,g}\phi_g$), and graphite wall temperature
+distribution ($T_{wall}$) to \gls{SAM}. These 3-D quantities are collapsed into 1-D distributions
+using LayeredAverage and LayeredSideAverage UserObjects from MOOSE before being transferred to
+corresponding 1-D regions in \gls{SAM} using MultiAppGeneralFieldUserObjectTransfer. \gls{SAM}
+solves the 1-D multichannel thermal-hydraulics system and six-group precursor equations and
+transfers the fluid temperature distribution ($T_{fluid}$), wall heat transfer coefficient
+distribution ($h_{wall}$), and delayed neutron source distribution ($\sum_i \lambda_i C_i$) to
+Moltres. These 1-D quantities are projected to the 3-D Moltres problem domain using
+MultiAppGeneralFieldNearestLocationTransfer. Consequently, the fluid temperature and delayed
+neutron source are radially uniform within each fuel channel.
+
+This work used the OpenMC Monte Carlo particle transport code to generate material-wise group
+constants for Moltres with reference zero-power critical core specifications from the \gls{MSRE}
+benchmark report \cite{fratoni_molten_2020}. We obtained the coupled steady-state
+solution using a two-step process. First, we ran the coupled model with \gls{SAM} in time-dependent
+solver mode and Moltres in $k$-eigenvalue solver mode, scaled to a fixed total power of 8 MW. Then,
+we used the solution as an initial condition for a loosely coupled transient simulation with
+timestep sizes starting from $dt=0.2$ s and increasing to $dt=2$
+s to obtain the steady-state solutions for neutron flux, precursor, velocity, and temperature
+distributions. \gls{SAM} ran in time-dependent solver mode on both instances. All simulations ran
+on five compute nodes in the Lonestar6 high performance computing system at the Texas Advanced
+Computing Center (TACC) with 128 MPI ranks and 512 GB memory per node. The \gls{SAM} subapp was
+limited to 128 processors overall to avoid incurring performance penalties of splitting the small
+1-D simulation relative to the large 3-D Moltres simulation.
+
+\section{SIMULATION RESULTS \& DISCUSSION}
+
+(Due to technical issues with the full-core multiphysics model, this draft presents \gls{SAM} TH
+results from a multiphysics simulation of a smaller 97-channel model, and Moltres neutronics
+results from a single-physics full-core simulation. We are confident that we will have
+the full-core multiphysics results by the revised paper submission deadline.)
+
+\begin{figure}[!b]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{steady-state}
+    \caption{Vertical cross section of the steady-state temperature distribution in the 3-D core
+      region and the 1-D out-of-core salt loop region.}
+    \label{fig:steady}
+\end{figure}
+
+This work presents the steady-state solution of the 3-D/1-D multiphysics modeling framework applied
+to the \gls{MSR} described in \ref{sec:model}. Figure \ref{fig:steady} shows the steady-state
+temperature distribution in a vertical cross section of the 3-D core region and the 1-D out-of-core
+loop region. The striping observed in the 3-D core region illustrate the temperature differences
+between the fuel and graphite regions. There is a difference of approximately
+8 K between the fuel channel outlet temperature and the maximum temperature in neighboring
+graphite regions. At steady state, the reactor power output and heat removal rate in the heat
+exchanger component are consistent with each other and maintained a steady temperature
+distribution. In the absence of control rods, we applied a fixed scaling factor to the fission
+source term in Moltres to attain a core inlet temperature of approximately 908.15 K (derived from
+\gls{MSRE} operating data). The neutronics model was otherwise allowed to freely respond to
+temperature reactivity feedback and delayed neutron precursor drift.
+
+Figure \ref{fig:flux} shows a vertical cross section view of the group 1 and 2 neutron fluxes. The
+flux distributions exhibit expected cosine-shape distributions that peak near the core center and
+drop near the external vacuum boundaries. Future publications of this model will include control
+rods at the center of the core. The delayed neutron source distribution across the entire salt loop
+can be seen in Figure \ref{fig:delayed}. The upward advection of delayed neutron precursors shifts
+the peak significantly higher than the flux peaks. The salt recirculation time of approximately 25
+s allows some precursors with relatively longer half-lives to re-enter the core.
+
+\begin{figure}[!tb]
+    \centering
+
+    \begin{subfigure}[b]{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{group-1}
+      \caption{Group 1}
+      \label{fig:g1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{group-2}
+      \caption{Group 2}
+      \label{fig:g2}
+    \end{subfigure}
+    
+    \caption{Group 1 and 2 neutron flux distributions on the vertical cross section of the 3-D
+    core region.}
+    \label{fig:flux}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=0.6\columnwidth]{delayed}
+    \caption{Delayed neutron source distribution from the 1-D multichannel \gls{MSR}
+    model.}
+    \label{fig:delayed}
+\end{figure}
+
+\section{CONCLUSIONS}
+
+This work introduced a multiscale 3-D/1-D multiphysics simulation framework for molten salt reactor
+analysis. This new multiphysics tool couples Moltres, a 3-D \gls{MSR} multiphysics code, to
+\gls{SAM}, a modern reactor systems code, through native \gls{MOOSE} coupling interfaces supported
+by both codes. This multiscale approach balances model fidelity and computational
+cost without losing 3-D spatial resolution of the reactor core.
+
+We demonstrated its capabilities through a steady-state simulation of a full-core \gls{MSR}
+model derived heavily from the \gls{MSRE} design. The model reached steady state and produced
+expected distributions of various neutronic and thermal-hydraulic parameters. Further code
+verification work is ongoing to certify that the Moltres, \gls{SAM}, and their coupling is
+consistent with other multiphysics tools in modeling \glspl{MSR} through the \gls{MSR} progression
+problem benchmarks \cite{gentry_graphite-moderated_2025}.
+
+Ongoing and future efforts include refining the coupling scheme to improve computational
+performance, adding bypass flow and other omitted components to the \gls{MSR} model, implementing
+accurate control rod modeling capabilities, and performing transient \gls{MSR} analyses.
+
+\section*{ACKNOWLEDGEMENTS}
+
+This work was supported by the State of Texas through the Digital Molten Salt Reactor Initiative.
+The authors acknowledge the Texas Advanced Computing Center (TACC) at The University of Texas at
+Austin for providing computational resources that have contributed to the research results reported
+within this paper.
+
+\bibliographystyle{physor2026}
+\bibliography{main}
+
+%\appendix
+%
+%\section{}
+%If necessary, include Appendices numbered in upper case alphabetical order.
+%
+%To ensure a uniform, professional look at the proceedings, please only modify the format of this template after checking with the publication chair first.
+
+
+\end{document}
