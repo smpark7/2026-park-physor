@@ -925,7 +925,7 @@ FUNCTION {article}
     }
   if$
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -959,7 +959,7 @@ FUNCTION {book}
   format.edition output
   format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -974,7 +974,7 @@ FUNCTION {booklet}
   address "address" bibinfo.check output
   format.date output
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1012,7 +1012,7 @@ FUNCTION {inbook}
   format.edition output
   format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1039,7 +1039,7 @@ FUNCTION {incollection}
     }
   if$
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1069,7 +1069,7 @@ FUNCTION {inproceedings}
     }
   if$
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1107,7 +1107,7 @@ FUNCTION {manual}
   format.edition output
   format.date output
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1125,7 +1125,7 @@ FUNCTION {mastersthesis}
   address "address" bibinfo.check output
   format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1140,7 +1140,7 @@ FUNCTION {misc}
   howpublished "howpublished" bibinfo.check output
   format.date output
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1158,7 +1158,7 @@ FUNCTION {phdthesis}
   address "address" bibinfo.check output
   format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1197,7 +1197,7 @@ FUNCTION {proceedings}
   if$
       format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1215,7 +1215,7 @@ FUNCTION {techreport}
   address "address" bibinfo.check output
   format.date "year" output.check
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note output
   fin.entry
@@ -1228,7 +1228,7 @@ FUNCTION {unpublished}
   format.title "title" output.check
   format.date output
   new.block
-  format.url output
+  %format.url output
   new.block
   %format.note "note" output.check
   fin.entry
