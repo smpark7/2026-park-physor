@@ -927,7 +927,7 @@ FUNCTION {article}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 FUNCTION {book}
@@ -961,7 +961,7 @@ FUNCTION {book}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 FUNCTION {booklet}
@@ -976,7 +976,7 @@ FUNCTION {booklet}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1014,7 +1014,7 @@ FUNCTION {inbook}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1041,7 +1041,7 @@ FUNCTION {incollection}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 FUNCTION {inproceedings}
@@ -1071,7 +1071,7 @@ FUNCTION {inproceedings}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 FUNCTION {conference} { inproceedings }
@@ -1109,7 +1109,7 @@ FUNCTION {manual}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1127,7 +1127,7 @@ FUNCTION {mastersthesis}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1142,7 +1142,7 @@ FUNCTION {misc}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
   empty.misc.check
 }
@@ -1160,7 +1160,7 @@ FUNCTION {phdthesis}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1199,7 +1199,7 @@ FUNCTION {proceedings}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1217,7 +1217,7 @@ FUNCTION {techreport}
   new.block
   format.url output
   new.block
-  format.note output
+  %format.note output
   fin.entry
 }
 
@@ -1230,7 +1230,7 @@ FUNCTION {unpublished}
   new.block
   format.url output
   new.block
-  format.note "note" output.check
+  %format.note "note" output.check
   fin.entry
 }
 
